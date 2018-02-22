@@ -1,5 +1,7 @@
 #!/bin/sh
 
 # kill all the mxnet training processes across all hosts
-python ../tools/kill-mxnet.py hosts raina4 train_mnist.p
-sudo python ../tools/kill-mxnet.py hosts root train_mnist.p
+# $1 = username (raina4 or mghosh4)
+# $2 = training program python filename (train_mnist.py)
+python ../tools/kill-mxnet.py hosts $1 $2
+sudo python ../tools/kill-mxnet.py hosts root $2

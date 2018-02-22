@@ -1,3 +1,4 @@
 #!/bin/sh
 
-python ../tools/launch.py -n 3 -H hosts python train_mnist.py --network lenet --kv-store dist_sync
+# $1 = training program python filename
+python ../tools/launch.py -n 3 -H hosts python $1 --kv-store dist_sync
