@@ -21,13 +21,16 @@ from __future__ import absolute_import
 
 from array import array
 import ctypes
+import numpy
 import pickle
-from .ndarray import NDArray
+from .ndarray import NDArray, zeros
 from .ndarray import _ndarray_cls
 from .base import _LIB, c_str_array, c_handle_array, c_array, c_array_buf, c_str
 from .base import check_call, string_types, mx_uint, py_str
 from .base import NDArrayHandle, KVStoreHandle
 from . import optimizer as opt
+
+numpy.set_printoptions(threshold=numpy.nan)
 
 def _ctype_key_value(keys, vals):
     """
@@ -99,8 +102,14 @@ class KVStore(object):
         self._updater = None
         self._updater_func = None
         self._str_updater_func = None
+        self.keyvalues = dict()
+        self.conviter = dict()
 
     def __del__(self):
+        for (key, value) in self.conviter.items():
+            print("Key: {0}".format(key))
+            print(value)
+
         check_call(_LIB.MXKVStoreFree(self.handle))
 
     def init(self, key, value):
@@ -218,6 +227,15 @@ class KVStore(object):
         >>> print b
         <RowSparseNDArray 2x3 @cpu(0)>
         """
+
+        if key in self.keyvalues.keys():
+            sublist = (self.keyvalues[key] - value[0]).abs() < 0.00001
+            self.conviter[key] = sublist * self.conviter[key] + sublist   
+        else:
+            self.conviter[key] = zeros(value[0].shape)
+            
+        self.keyvalues[key] = value[0].copy()
+            
         ckeys, cvals, use_str_keys = _ctype_key_value(key, value)
         if use_str_keys:
             check_call(_LIB.MXKVStorePushEx(
